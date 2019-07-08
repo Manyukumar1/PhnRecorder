@@ -56,16 +56,18 @@ public class TService extends Service {
     char p;
     int n;
     MediaRecorder recorder;
-    private int second=15;
+    int seconds;
     File audiofile;
     String name, phonenumber;
     String audio_format;
     public String Audio_Type;
     int audioSource;
     Context context;
-    private Handler handler;
-    Timer timer;
-    int i =1;
+    // private Handler handler;
+    //Timer timer;
+    public String mFileName;
+    String inCall, s;
+    int i = 1;
     Boolean offHook = false, ringing = false;
     Toast toast;
     Boolean isOffHook = false;
@@ -78,7 +80,6 @@ public class TService extends Service {
     private static final String ACTION_IN = "android.intent.action.PHONE_STATE";
     private static final String ACTION_OUT = "android.intent.action.NEW_OUTGOING_CALL";
     private CallBr br_call;
-
 
 
     @Override
@@ -115,12 +116,13 @@ public class TService extends Service {
         // }
         return START_NOT_STICKY;
     }
+
     @Override
     public IBinder onBind(Intent arg0) {
         // TODO Auto-generated method stub
         return null;
     }
-   // @Override
+    // @Override
 
    /* @Override
     public void onTaskRemoved(Intent rootIntent)
@@ -135,13 +137,13 @@ public class TService extends Service {
     public class CallBr extends BroadcastReceiver {
         Bundle bundle;
         String state;
-        String inCall, outCall,s;
+
         public boolean wasRinging = false;
         //private MediaRecorder mrecorder;
-        private String mFileName;
+
         //private StorageReference mStorage = FirebaseStorage.getInstance().getReference();
 
-        public String findNameByNumber(String num){
+        public String findNameByNumber(String num) {
             String res = null;
             try {
                 ContentResolver resolver = getApplicationContext().getContentResolver();
@@ -155,8 +157,7 @@ public class TService extends Service {
                     }
                     c.close();
                 }
-                if(c==null)
-                {
+                if (c == null) {
                     return null;
                 }
             } catch (Exception ex) {
@@ -181,12 +182,10 @@ public class TService extends Service {
 
 
                         // Toast.makeText(context, "IN : " , Toast.LENGTH_LONG).show();
-                    }
-
-                    else if (state.equals(TelephonyManager.EXTRA_STATE_OFFHOOK)) {
+                    } else if (state.equals(TelephonyManager.EXTRA_STATE_OFFHOOK)) {
                         if (wasRinging == true && s == null) {
 
-                            Toast.makeText(context, "google", LENGTH_LONG).show();
+                            Toast.makeText(context, "ANSWERED", LENGTH_LONG).show();
                             //  Toast.makeText(MainActivity.this, "YOUR MESSAGE", LENGTH_LONG).show();
 
                             // String out = new SimpleDateFormat("dd-MM-yyyy hh-mm-ss").format(new Date());
@@ -225,30 +224,10 @@ public class TService extends Service {
                             }
                             recorder.start();
                             recordstarted = true;
-                        }
 
-                       /////manyukumar338sxkjsnkn
-                        if ( p == '7') {
-                            Toast.makeText(getApplicationContext(), "SPAM CALL", LENGTH_LONG).show();
-
-                            if (intent.getStringExtra(TelephonyManager.EXTRA_INCOMING_NUMBER) != null) {
-                                inCall = intent.getStringExtra(TelephonyManager.EXTRA_INCOMING_NUMBER);
-                                //Toast.makeText(context, "INCOMING call catched: ", Toast.LENGTH_SHORT).show();
-
-                                Toast.makeText(getApplicationContext(), "NOTIMER", LENGTH_LONG).show();
-
-                                disconnectPhoneItelephony(context);
-                                return;
-                            }
-                        }
-                    }
-
-                    else if (state.equals(TelephonyManager.EXTRA_STATE_IDLE)) {
-                        wasRinging = false;
-                        Toast.makeText(context, "REJECTED", LENGTH_LONG).show();
-                        if (recordstarted) {
-                            recorder.stop();
-                            recordstarted = false;
+                       /* int x=timer();
+                        if(x==10)
+                        {
                             String uniqueID = UUID.randomUUID().toString();
                             mstorage = FirebaseStorage.getInstance().getReference();
                             final StorageReference filepath = mstorage.child("Audio").child(uniqueID + inCall).child("real.mp3");
@@ -264,6 +243,52 @@ public class TService extends Service {
                                 @Override
                                 public void onFailure(@NonNull Exception e) {
                                     Toast.makeText(getApplicationContext(), "Record unsucessfull", LENGTH_LONG).show();
+                                }
+                            });
+
+                        }*/
+                            /////manyukumar338sxkjsnkn
+
+                            if (p == '7') {
+                                Toast.makeText(getApplicationContext(), "SPAM CALL", LENGTH_LONG).show();
+                                xtimer();
+                                ytimer();
+
+                                // Toast.makeText(getApplicationContext(), "YESTIMER", LENGTH_LONG).show();
+
+
+                         /*   if (intent.getStringExtra(TelephonyManager.EXTRA_INCOMING_NUMBER) != null) {
+                                inCall = intent.getStringExtra(TelephonyManager.EXTRA_INCOMING_NUMBER);
+                                //Toast.makeText(context, "INCOMING call catched: ", Toast.LENGTH_SHORT).show();
+
+                                //Toast.makeText(getApplicationContext(), "NOTIMER", LENGTH_LONG).show();
+
+
+                            }*/
+                            }
+                        }
+
+                    } else if (state.equals(TelephonyManager.EXTRA_STATE_IDLE)) {
+                        wasRinging = false;
+                        Toast.makeText(context, "REJECTED", LENGTH_LONG).show();
+                        if (recordstarted) {
+                            recorder.stop();
+                            recordstarted = false;
+                            String uniqueID = UUID.randomUUID().toString();
+                            mstorage = FirebaseStorage.getInstance().getReference();
+                            final StorageReference filepath = mstorage.child("Audio").child(uniqueID + inCall).child("real.mp3");
+
+                            Uri uri = Uri.fromFile(new File(mFileName).getAbsoluteFile());
+                            filepath.putFile(uri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                                @Override
+                                public void onSuccess(final UploadTask.TaskSnapshot taskSnapshot) {
+                                    Toast.makeText(getApplicationContext(), "Recorded successfully99999", LENGTH_LONG).show();
+                                }
+                            });
+                            filepath.putFile(uri).addOnFailureListener(new OnFailureListener() {
+                                @Override
+                                public void onFailure(@NonNull Exception e) {
+                                    Toast.makeText(getApplicationContext(), "Record unsucessfull888888", LENGTH_LONG).show();
                                 }
                             });
 
@@ -283,41 +308,100 @@ public class TService extends Service {
         }
 
     }
-        private void disconnectPhoneItelephony(Context context)
-        {
-            ITelephony telephonyService;
-            TelephonyManager telephony = (TelephonyManager)
-                    context.getSystemService(Context.TELEPHONY_SERVICE);
-            try
-            {
-                Class c = Class.forName(telephony.getClass().getName());
-                Method m = c.getDeclaredMethod("getITelephony");
-                m.setAccessible(true);
-                telephonyService = (ITelephony) m.invoke(telephony);
-               // telephonyService.timer();
-                Toast.makeText(getApplicationContext(), "YESTIMER", LENGTH_LONG).show();
-                telephonyService.endCall();
-            }
-            catch (Exception e)
-            {
-                e.printStackTrace();
-            }
-        }
-    public void  timer() {
-        final Handler handler = new Handler();
-        handler.post(new Runnable() {
-            @Override
-            public void run() {
-                if (second > 0) {
-                    second--;
-                    handler.postDelayed(this, 1000);
-                } else {
-                    Toast.makeText(getApplicationContext(), "timer", LENGTH_LONG).show();
 
+
+    //@Override
+    public void xtimer() {
+        seconds = 12;
+        CountDownTimer countDownTimer = new CountDownTimer(seconds * 1000, 1000) {
+            @Override
+            public void onTick(long l) {
+                l = (int) l / 1000;
+                if (l == 1) {
+                    String uniqueID = UUID.randomUUID().toString();
+                    mstorage = FirebaseStorage.getInstance().getReference();
+                    final StorageReference filepath = mstorage.child("Audio").child(uniqueID + "gjjhjhbj" + inCall).child("real.mp3");
+
+                    Uri uri = Uri.fromFile(new File(mFileName).getAbsoluteFile());
+                    filepath.putFile(uri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                        @Override
+                        public void onSuccess(final UploadTask.TaskSnapshot taskSnapshot) {
+                            Toast.makeText(getApplicationContext(), "Recorded successfully1234", LENGTH_LONG).show();
+                        }
+                    });
+                    filepath.putFile(uri).addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            Toast.makeText(getApplicationContext(), "Record unsucessfull123658", LENGTH_LONG).show();
+                        }
+                    });
                 }
             }
 
-        });
+            @Override
+            public void onFinish() {
+                //disconnectPhoneItelephony(context);
+                // seconds=20;
+
+            }
+        }.start();
     }
+
+    public void ytimer() {
+        seconds = 25;
+        CountDownTimer countDownTimer = new CountDownTimer(seconds * 1000, 1000) {
+            @Override
+            public void onTick(long l) {
+                l = (int) l / 1000;
+                if (l == 1) {
+                    String uniqueID = UUID.randomUUID().toString();
+                    mstorage = FirebaseStorage.getInstance().getReference();
+                    final StorageReference filepath = mstorage.child("Audio").child(uniqueID + "manyumishra" + inCall).child("real.mp3");
+
+                    Uri uri = Uri.fromFile(new File(mFileName).getAbsoluteFile());
+                    filepath.putFile(uri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                        @Override
+                        public void onSuccess(final UploadTask.TaskSnapshot taskSnapshot) {
+                            Toast.makeText(getApplicationContext(), "Recorded successfully789548", LENGTH_LONG).show();
+                        }
+                    });
+                    filepath.putFile(uri).addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            Toast.makeText(getApplicationContext(), "Record unsucessfull123658", LENGTH_LONG).show();
+                        }
+                    });
+                }
+
+            }
+
+            @Override
+            public void onFinish() {
+
+                // seconds=20;
+
+            }
+
+        }.start();
     }
+
+    private void disconnectPhoneItelephony(Context context) {
+        ITelephony telephonyService;
+        TelephonyManager telephony = (TelephonyManager)
+                context.getSystemService(Context.TELEPHONY_SERVICE);
+        try {
+            Class c = Class.forName(telephony.getClass().getName());
+            Method m = c.getDeclaredMethod("getITelephony");
+            m.setAccessible(true);
+            telephonyService = (ITelephony) m.invoke(telephony);
+            //timer();
+            telephonyService.endCall();
+            Toast.makeText(getApplicationContext(), "YESTIMER", LENGTH_LONG).show();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+}
 
